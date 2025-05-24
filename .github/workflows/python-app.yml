@@ -1,0 +1,45 @@
+name: Flask CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  AWS_REGION: ap-northeast-2  
+  S3_BUCKET: heliumgas-deploy
+  S3_DEPLOY_FILE: heliumgas-flask
+  CODEDEPLOY_APP: heliumgas-app
+  CODEDEPLOY_GROUP: heliumgas-app-flask
+  CODEDEPLOY_CONFIG: CodeDeployDefault.AllAtOnce  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: setup python 
+        uses: actions/setup-python@v4 
+        with: 
+          python-version: "3.9"
+    
+      - name: Zip Make
+        run: |
+          zip -qq -r ./${{ env.S3_DEPLOY_FILE }}.zip . -x "*.git*" -x "*.idea*"
+
+      - name: AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp --region ${{ env.AWS_REGION }} ./${{ env.S3_DEPLOY_FILE }}.zip s3://${{ env.S3_BUCKET }}      
+
+      - name: Run to Codedeploy
+        run: |
+          aws deploy create-deployment --application-name ${{ env.CODEDEPLOY_APP }} \
+            --deployment-group-name ${{ env.CODEDEPLOY_GROUP }} \
+            --deployment-config-name ${{ env.CODEDEPLOY_CONFIG }} \
+            --s3-location bucket=${{ env.S3_BUCKET }},bundleType=zip,key=${{ env.S3_DEPLOY_FILE }}.zip
