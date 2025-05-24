@@ -1,0 +1,1 @@
+2025-05-06 14:07:52,541 [ERROR] check_order 실패: status=400, orderId=dsffsdfsd123312312 in /home/ec2-user/heliumgas/flask/app.py:225
