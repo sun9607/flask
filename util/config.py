@@ -8,7 +8,7 @@ def get_db_connection():
         config = {
             "user": os.getenv("SQL_USER"),
             "password": os.getenv("SQL_PASSWORD"),
-            "host": "heliumgas-db.czac4ea085m2.ap-northeast-2.rds.amazonaws.com",
+            "host": "localhost",
             "database": "invitationcard_db"
         }
         return mysql.connector.connect(**config)
